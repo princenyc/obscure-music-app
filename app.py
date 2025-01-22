@@ -33,12 +33,15 @@ st.write(f"Found: {track['name']} by {track['artists'][0]['name']}")
 
 
             # Find recommendations
-            recommendations = sp.recommendations(seed_tracks=[track_id], limit=5)
-            st.write("Similar Songs:")
-            for rec in recommendations['tracks']:
-                st.write(f"- {rec['name']} by {rec['artists'][0]['name']}")
-                st.write(f"[Listen on Spotify](https://open.spotify.com/track/{rec['id']})")
-        else:
-            st.error("Song not found. Please try another.")
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
+           try:
+    recommendations = sp.recommendations(seed_tracks=[track_id], limit=5)
+    if not recommendations['tracks']:
+        st.error("No recommendations found for this track.")
+    else:
+        st.write("Similar Songs:")
+        for rec in recommendations['tracks']:
+            st.write(f"- {rec['name']} by {rec['artists'][0]['name']}")
+            st.write(f"[Listen on Spotify](https://open.spotify.com/track/{rec['id']})")
+except Exception as e:
+    st.error(f"An error occurred while fetching recommendations: {e}")
+
