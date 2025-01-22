@@ -24,8 +24,13 @@ if st.button("Find Similar Songs"):
         results = sp.search(q=f"track:{song_name} artist:{artist_name}", type="track", limit=1)
         if results['tracks']['items']:
             track = results['tracks']['items'][0]
-            track_id = track['id']
-            st.write(f"Found: {track['name']} by {track['artists'][0]['name']}")
+            track_id = track.get('id')
+if not track_id:
+    st.error("Track ID not found. Please try a different song.")
+    st.stop()
+
+st.write(f"Found: {track['name']} by {track['artists'][0]['name']}")
+
 
             # Find recommendations
             recommendations = sp.recommendations(seed_tracks=[track_id], limit=5)
