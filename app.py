@@ -15,6 +15,7 @@ sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
 st.title("Discover Obscure Music")
 st.write("Enter a song and artist to find similar obscure songs!")
 
+# Input fields
 song_name = st.text_input("Enter a song name:")
 artist_name = st.text_input("Enter the artist name:")
 
@@ -24,24 +25,23 @@ if st.button("Find Similar Songs"):
         results = sp.search(q=f"track:{song_name} artist:{artist_name}", type="track", limit=1)
         if results['tracks']['items']:
             track = results['tracks']['items'][0]
-            track_id = track.get('id')
-if not track_id:
-    st.error("Track ID not found. Please try a different song.")
-    st.stop()
+            track_id = track.get('id')  # Get the track ID
+            if not track_id:
+                st.error("Track ID not found. Please try a different song.")
+                st.stop()  # Stops execution if no track ID is found
+            
+            st.write(f"Found: {track['name']} by {track['artists'][0]['name']}")
 
-st.write(f"Found: {track['name']} by {track['artists'][0]['name']}")
-
-
-            # Find recommendations
-           try:
-    recommendations = sp.recommendations(seed_tracks=[track_id], limit=5)
-    if not recommendations['tracks']:
-        st.error("No recommendations found for this track.")
-    else:
-        st.write("Similar Songs:")
-        for rec in recommendations['tracks']:
-            st.write(f"- {rec['name']} by {rec['artists'][0]['name']}")
-            st.write(f"[Listen on Spotify](https://open.spotify.com/track/{rec['id']})")
-except Exception as e:
-    st.error(f"An error occurred while fetching recommendations: {e}")
-
+            # Fetch recommendations
+            recommendations = sp.recommendations(seed_tracks=[track_id], limit=5)
+            if not recommendations['tracks']:
+                st.error("No recommendations found for this track.")
+            else:
+                st.write("Similar Songs:")
+                for rec in recommendations['tracks']:
+                    st.write(f"- {rec['name']} by {rec['artists'][0]['name']}")
+                    st.write(f"[Listen on Spotify](https://open.spotify.com/track/{rec['id']})")
+        else:
+            st.error("Song not found. Please check the name and artist.")
+    except Exception as e:
+        st.error(f"An error occurred while fetching recommendations: {e}")
