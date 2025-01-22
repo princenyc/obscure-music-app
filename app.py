@@ -19,21 +19,21 @@ artist_name = st.text_input("Enter the artist name:")
 if st.button("Get Recommendations"):
     try:
         # ChatGPT prompt for recommendations
-        prompt = f"""
-        Suggest 5 obscure songs that are similar to the song '{song_name}' by {artist_name}. 
-        Include a short description for each song.
-        """
+        messages = [
+            {"role": "system", "content": "You are a music expert who provides obscure song recommendations."},
+            {"role": "user", "content": f"Suggest 5 obscure songs similar to '{song_name}' by {artist_name}. Include a short description for each song."}
+        ]
         
         # Call the OpenAI API
-        response = openai.Completion.create(
-            engine="text-davinci-003",  # You can use "gpt-4" if available
-            prompt=prompt,
-            max_tokens=250,  # Controls the length of the response
-            temperature=0.7  # Adjusts creativity (higher = more creative)
+        response = openai.ChatCompletion.create(
+            model="gpt-4",  # Use "gpt-3.5-turbo" if "gpt-4" is unavailable
+            messages=messages,
+            max_tokens=300,
+            temperature=0.7
         )
 
         # Parse the API response
-        recommendations = response.choices[0].text.strip()
+        recommendations = response["choices"][0]["message"]["content"]
 
         # Display the recommendations
         st.write("**AI-Generated Recommendations:**")
@@ -42,3 +42,4 @@ if st.button("Get Recommendations"):
     except Exception as e:
         # Handle errors
         st.error(f"An error occurred: {e}")
+
