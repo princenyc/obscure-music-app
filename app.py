@@ -1,50 +1,44 @@
 import streamlit as st
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
+import openai
 
-# Spotify API credentials
-SPOTIFY_CLIENT_ID = "a138efe96c83470c82e28f020b5bf700"
-SPOTIFY_CLIENT_SECRET = "f004697b23a544a0933a13e522602dfd"
+# Retrieve OpenAI API key from Streamlit secrets
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
-# Authenticate with Spotify
-sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
-    client_id=SPOTIFY_CLIENT_ID,
-    client_secret=SPOTIFY_CLIENT_SECRET
-))
+# Set OpenAI API key
+openai.api_key = OPENAI_API_KEY
 
+# App title and description
 st.title("Discover Obscure Music")
-st.write("Enter a song and artist to find similar obscure songs!")
+st.write("Enter a song and artist to get AI-generated recommendations!")
 
-# Input fields
+# Input fields for song and artist
 song_name = st.text_input("Enter a song name:")
 artist_name = st.text_input("Enter the artist name:")
 
-if st.button("Find Similar Songs"):
+# Button to generate recommendations
+if st.button("Get Recommendations"):
     try:
-        # Search for the song
-        results = sp.search(q=f"track:{song_name} artist:{artist_name}", type="track", limit=1)
-        if results['tracks']['items']:
-            track = results['tracks']['items'][0]
-            track_id = track.get('id')  # Get the track ID
-            if not track_id:
-                st.error("Track ID not found. Please try a different song.")
-                st.stop()  # Stops execution if no track ID is found
-            
-            st.write(f"Found: {track['name']} by {track['artists'][0]['name']}")
+        # ChatGPT prompt for recommendations
+        prompt = f"""
+        Suggest 5 obscure songs that are similar to the song '{song_name}' by {artist_name}. 
+        Include a short description for each song.
+        """
+        
+        # Call the OpenAI API
+        response = openai.Completion.create(
+            engine="text-davinci-003",  # You can use "gpt-4" if available
+            prompt=prompt,
+            max_tokens=250,  # Controls the length of the response
+            temperature=0.7  # Adjusts creativity (higher = more creative)
+        )
 
-            # Fetch recommendations
-            try:
-                recommendations = sp.recommendations(seed_tracks=[track_id], limit=5)
-                if not recommendations['tracks']:
-                    st.error("No recommendations found for this track.")
-                else:
-                    st.write("Similar Songs:")
-                    for rec in recommendations['tracks']:
-                        st.write(f"- {rec['name']} by {rec['artists'][0]['name']}")
-                        st.write(f"[Listen on Spotify](https://open.spotify.com/track/{rec['id']})")
-            except Exception as rec_error:
-                st.error(f"Error fetching recommendations: {rec_error}")
-        else:
-            st.error("Song not found. Please check the name and artist.")
+        # Parse the API response
+        recommendations = response.choices[0].text.strip()
+
+        # Display the recommendations
+        st.write("**AI-Generated Recommendations:**")
+        st.write(recommendations)
+
     except Exception as e:
+        # Handle errors
         st.error(f"An error occurred: {e}")
